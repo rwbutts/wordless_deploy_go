@@ -1,0 +1,21 @@
+steps:
+# Build the container image, push to Artifacts, and push to the Cloud Run service
+
+- name: 'gcr.io/cloud-builders/docker'
+  args: ['build', '-t', 'gcr.io/$PROJECT_ID/github.com/rwbutts/wordless_deploy_go:$TAG_NAME',  
+        '-t', 'gcr.io/$PROJECT_ID/github.com/rwbutts/wordless_deploy_go:latest', 
+        '--build-arg', 'TAG_NAME=$TAG_NAME',
+        '.']
+        
+# Push the container image to Container Registry, with tag and "latest" tag too.
+- name: 'gcr.io/cloud-builders/docker'
+  args: ['push', 'gcr.io/$PROJECT_ID/github.com/rwbutts/wordless_deploy_go:$TAG_NAME']
+- name: 'gcr.io/cloud-builders/docker'
+  args: ['push', 'gcr.io/$PROJECT_ID/github.com/rwbutts/wordless_deploy_go:latest']
+
+# Deploy container image to Cloud Run
+- name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+  entrypoint: gcloud
+  args: ['run', 'deploy', 'wordless-go', '--image', 'gcr.io/$PROJECT_ID/github.com/rwbutts/wordless_deploy_go:$TAG_NAME', '--region', 'us-east4']
+images:
+- gcr.io/$PROJECT_ID/github.com/rwbutts/wordless_deploy_go:$TAG_NAME
